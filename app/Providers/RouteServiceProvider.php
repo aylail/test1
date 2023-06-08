@@ -24,6 +24,8 @@ class RouteServiceProvider extends ServiceProvider
      *
      * @return void
      */
+    protected $namespace = 'App\\Http\\Controllers'; //追記箇所２
+
     public function boot()
     {
         $this->configureRateLimiting();
@@ -34,6 +36,7 @@ class RouteServiceProvider extends ServiceProvider
                 ->group(base_path('routes/api.php'));
 
             Route::middleware('web')
+                ->namespace($this->namespace) //追記箇所１
                 ->group(base_path('routes/web.php'));
         });
     }
