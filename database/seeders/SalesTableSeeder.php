@@ -17,15 +17,15 @@ class SalesTableSeeder extends Seeder
         \DB::table('sales')->insert([
             [
                 'id' => '10',
-                'product_id' => '1',  
+                'product_id' => '1111',  
             ],
             [
                 'id' => '20',
-                'product_id' => '2',  
+                'product_id' => '2222',  
             ],
             [
                 'id' => '30',
-                'product_id' => '3',  
+                'product_id' => '3333',  
             ],
 
         ]);

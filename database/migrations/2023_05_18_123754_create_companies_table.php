@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('companies', function (Blueprint $table) {
             $table->bigIncrements('id')->unsigned();
-           // $table->foreign('id')->references('id')->on('////');
+           // $table->foreign('id')->references('company_id')->on('products');
             $table->string('company_name')->comment('会社名');
             $table->string('street_address')->comment('住所');
             $table->string('representative_name')->comment('代表者');

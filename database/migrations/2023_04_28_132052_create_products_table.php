@@ -15,8 +15,8 @@ return new class extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->bigIncrements('id')->unsigned();
-           // $table->foreign('user_id')->references('id')->on('users');
-            $table->integer('company_id');//->unsigned();
+           // $table->foreign('id')->references('product_id')->on('sales');
+            $table->integer('company_id')->unsigned();
             $table->string('product_name');
             $table->integer('price');
             $table->integer('stock');//->nullable()->default('0');

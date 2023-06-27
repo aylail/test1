@@ -8,20 +8,30 @@
         @csrf
         <h3 class="has-text-weight-bold">商品名:</h3>
         <input class="input" type="text" name="product_name" placeholder="商品名">
+        
+        <h3 class="has-text-weight-bold">メーカー</h3>
+        <select class="select" name="company_name"> 
+              @foreach ($companies as $company)
+                <option>{{$company->company_name}}</option>
+                @endforeach
+               
+                </select>
+
         <h3 class="has-text-weight-bold">価格:</h3>
-        <textarea class="input" name="price" placeholder="価格"></textarea>
+        <input class="input" name="price" placeholder="価格"></input>
         <h3 class="has-text-weight-bold">在庫数:</h3>
         <input class="input" type="text" name="stock" placeholder="在庫数">
-        <h3 class="has-text-weight-bold">詳細:</h3>
-        <input class="input" type="text" name="comment" placeholder="詳細">
-        <h3 class="has-text-weight-bold">id:</h3>
-        <input class="input" type="text" name="company_id" placeholder="id">
-
+        <h3 class="has-text-weight-bold">コメント:</h3>
+        <input class="textarea" type="text" name="comment" placeholder="コメント">
+       
+       
         <form action="/upload" enctype="multipart/form-data" method="post">
         <h3 class="has-text-weight-bold">画像:アップロード</h3>
         <input type="file" class="input" name="img_path">
-        <button type="submit" class="button is-success my-4">送信</button>
+        <button type="submit" class="button is-success my-4">登録</button>
+
 </form>
+
 
         <div class="columns">
             <div class="column">

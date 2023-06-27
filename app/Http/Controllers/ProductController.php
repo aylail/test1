@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Models\Products;
-use App\Models\Companies;
+use App\Models\Product;
+use App\Models\Company;
 use Illuminate\Support\Facades\Storage;
 
 
@@ -18,17 +18,19 @@ class ProductController extends Controller
      */
     public function getLists(Request $request)
     {
-      $products = products::latest()->get();
-     // return view('products',compact('products'));
+      $products = product::latest()->get();
       
-      $products = products::all();
-      $companies = companies::all();
+      $products = product::all();
+      $companies = company::all();
+
+
 
 //検索機能
+
       $searchword = $request->input('searchword');
       $companies = $request->input('company_id');
 
-        $query = products::query();
+        $query = product::query();
 
      if(!empty($searchword))
     {
@@ -41,35 +43,12 @@ class ProductController extends Controller
     if(!empty($companies)){
         $query->where('company_id',$companies)->get();
     }
-
-
     // 全件取得 
     $products = $query->orderBy('id','desc')->get();
    // $companies = $query->orderBy('company_id')->get();
-    return view('products')->with('products',$products,$companies)->with('searchword',$searchword);
+    return view('products')->with('products',$products)->with('companies',$companies)->with('searchword',$searchword);
        // return view('products', compact('products', 'searchword'));
-
     }
-
-    //検索機能
-   /* public function searchWord(Request $request)
-    {
-        $searchword = $request->input('searchword');
-
-        $query = products::query();
-
-        if(!empty($searchword)) {
-            $query->where('company_id', 'LIKE', "%{$searchword}%");
-               // ->orWhere('', 'LIKE', "%{$searchword}%");
-        }
-
-        $products = $query->get();
-
-        $copmanies = $companies->company_name()->where('companies')->get();
-
-
-        return view('searchword', compact('products', 'searchword'));
-    }*/
 
     /**
      * Show the form for creating a new resource.
@@ -78,13 +57,15 @@ class ProductController extends Controller
      */
     public function create()
     {
-        return view('regists');
 
-       /* $products = Products::all();
-        $companies = Companies::all();
-s
-        ->with('products',$products)
-        ->with('companies',$companies);*/
+       $products = Product::all();
+       $companies = Company::all();
+
+       return view('regists',compact('products','companies'));
+
+
+       // ->with('products',$products)
+        //->with('companies',$companies);
     }
 
     /**
@@ -95,16 +76,19 @@ s
      */
     public function store(Request $request)
     {
+        Company::select('company_name')->get();
+
         $request->validate([
             'product_name' => 'required',
             'price' => 'required',
             'stock' => 'required',
-            'comment' => 'required',
-            'img_path' => 'image'
+            'comment' => 'nullable',
+            'company_name' => 'required',
+            'img_path' => 'nullable'
         ]);
 
            //画像ファイルを取得し保存
-        $img = $request->file('img_path');
+        /*$img = $request->file('img_path');
 
         if(isset($img)){
             $path = $img->store('img','public');
@@ -113,12 +97,12 @@ s
                     'img_path' => $path,
                 ]);
             }
-        }
-      
-  
+        }*/
+        //only リクエストをまとめて受け取る
+        $request = $request->only(['product_name','price','stock','company_name']);
 
-
-        Products::create($request->all());
+        Product::create($request);
+        Company::create($request);
        
         return redirect()->route('products');
     }
@@ -129,12 +113,19 @@ s
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Request $request,$id)
     {
-        $companies = Companies::findOrFail($id);//where("company_name","street_address","representative_name");
-        return view('show')->with(['companies' => $companies]);
-       // $companies = Companies::latest()->get();
-        //return view('show',compact('companies'));
+        $companies = Company::findOrFail($id);
+        $products = Product::with('company')->get();
+        $products = Product::all();
+
+        return view('show')
+            ->with(['products' => $products,'companies' => $companies]);
+      /* $products = Product::findOrFail($id);
+       $companies = Company::with('Company')->get();
+
+        return view('show',['companies' => $companies,'products' => $products]); 
+    */
 
     }
 
@@ -144,13 +135,19 @@ s
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit(Companies $companies, $id)
+    public function edit(company $companies,$id)
     {
-        //会社名のみを表示したい
-        $companies = Companies::get();
-        $products = products::findOrFail($id);
 
-        return view('edit',compact('products','companies'));
+        //会社名のみを表示したい
+       // $companies = companies::findOrFail($id);
+       $products = product::findOrFail($id);
+       $company = company::where('company_name')->get();
+
+        return view('edit')->with(['product' => $products,'companies' => $company]);
+
+
+     // return view('edit',compact('products','companies'));
+                //,compact('products','companies'));
 
     }
 
@@ -190,7 +187,7 @@ s
      */
     public function destroy(Request $request,$id)
     {
-        $products = products::findOrFail($id);
+        $products = product::findOrFail($id);
         $products->delete();
        
         return redirect()->route('products');
