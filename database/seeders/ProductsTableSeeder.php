@@ -21,7 +21,7 @@ class ProductsTableSeeder extends Seeder
                 'product_name' => 'コーラ',
                 'price' => '120',
                 'stock' => '1',
-                'comment' => 'コカ・コーラ',
+                'comment' => '350ml',
             ],
             [
                 'id' => '20',
@@ -29,7 +29,7 @@ class ProductsTableSeeder extends Seeder
                 'product_name' => 'お茶',
                 'price' => '10',
                 'stock' => '20',
-                'comment' => '伊藤園',
+                'comment' => '200ml',
             ],
             [
                 'id' => '30',
@@ -37,7 +37,7 @@ class ProductsTableSeeder extends Seeder
                 'product_name' => 'ビール',
                 'price' => '200',
                 'stock' => '3',
-                'comment' => 'アサヒ',
+                'comment' => '150ml',
             ],
             [
                 'id' => '40',
@@ -45,14 +45,14 @@ class ProductsTableSeeder extends Seeder
                 'product_name' => 'サイダー',
                 'price' => '200',
                 'stock' => '3',
-                'comment' => 'キリン',
+                'comment' => '430ml',
             ],   [
                 'id' => '50',
                 'company_id' =>'5',
                 'product_name' => '黒ラベル',
                 'price' => '200',
                 'stock' => '3',
-                'comment' => 'サッポロ',
+                'comment' => '100ml',
             ],
         ]);
     }

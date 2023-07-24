@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Company;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+
 
 
 class ProductController extends Controller
@@ -18,37 +20,35 @@ class ProductController extends Controller
      */
     public function getLists(Request $request)
     {
-      $products = product::latest()->get();
-      
-      $products = product::all();
-      $companies = company::all();
-
-
-
-//検索機能
-
-      $searchword = $request->input('searchword');
-      $companies = $request->input('company_id');
-
-        $query = product::query();
-
-     if(!empty($searchword))
-    {
-        $query->where('company_id','LIKE',"%{$searchword}%");
-        $query->orWhere('product_name','LIKE',"%{$searchword}%");
-        $query->orWhere('price','LIKE',"%{$searchword}%");
-        $query->orWhere('stock','LIKE',"%{$searchword}%");
-        $query->orWhere('comment','LIKE',"%{$searchword}%");
+        $product = Company::all();
+        $query = Product::query()->with('company');
+    
+        $searchword = $request->input('searchword');
+        $companyName = $request->input('company_name');
+    
+        if (!empty($searchword)) {
+            $query->where('company_id', 'LIKE', "%{$searchword}%")
+                  ->orWhere('product_name', 'LIKE', "%{$searchword}%")
+                  ->orWhere('price', 'LIKE', "%{$searchword}%")
+                  ->orWhere('stock', 'LIKE', "%{$searchword}%")
+                  ->orWhere('comment', 'LIKE', "%{$searchword}%");
+        }
+    
+        if (!empty($companyName)) {
+            $query->whereHas('company', function ($query) use ($companyName) {
+                $query->where('company_name', $companyName);
+            });
+        }
+    
+        // Get all products based on search and filters
+        $products = $query->orderBy('id', 'desc')->get();
+    
+        // Fetch all companies to populate the company_name dropdown
+        $companies = Company::all();
+    
+        return view('products', compact('products', 'companies', 'searchword', 'companyName'));
     }
-    if(!empty($companies)){
-        $query->where('company_id',$companies)->get();
-    }
-    // 全件取得 
-    $products = $query->orderBy('id','desc')->get();
-   // $companies = $query->orderBy('company_id')->get();
-    return view('products')->with('products',$products)->with('companies',$companies)->with('searchword',$searchword);
-       // return view('products', compact('products', 'searchword'));
-    }
+    
 
     /**
      * Show the form for creating a new resource.
@@ -74,38 +74,45 @@ class ProductController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
-    {
-        Company::select('company_name')->get();
 
-        $request->validate([
-            'product_name' => 'required',
-            'price' => 'required',
-            'stock' => 'required',
-            'comment' => 'nullable',
-            'company_name' => 'required',
-            'img_path' => 'nullable'
-        ]);
+public function store(Request $request)
+{
+    Company::select('company_name')->get();
 
-           //画像ファイルを取得し保存
-        /*$img = $request->file('img_path');
-
-        if(isset($img)){
-            $path = $img->store('img','public');
-            if($path){
-                Products::create([
-                    'img_path' => $path,
-                ]);
-            }
-        }*/
-        //only リクエストをまとめて受け取る
-        $request = $request->only(['product_name','price','stock','company_name']);
-
-        Product::create($request);
-        Company::create($request);
-       
-        return redirect()->route('products');
+    $request->validate([
+        'product_name' => 'required',
+        'price' => 'required',
+        'stock' => 'required',
+        'comment' => 'nullable',
+        'company_name' => 'required',
+        'img_path' => 'nullable'
+    ]);
+    if ($request->hasFile('img_path')) {
+        $path = $request->file('img_path')->store('img', 'public');
+    } else {
+        $path = null;
     }
+  
+    $company = Company::firstOrCreate(['company_name' => $request->input('company_name')]);
+
+    $product = new Product([
+        'product_name' => $request->input('product_name'),
+        'price' => $request->input('price'),
+        'stock' => $request->input('stock'),
+        'comment' => $request->input('comment'),
+        'img_path' => $path,
+    ]);
+
+    if (isset($path)) {
+        $product->img_path = $path;
+    }
+
+    $product->company()->associate($company);
+    $product->save();
+
+    return redirect()->route('products');
+}
+
 
     /**
      * Display the specified resource.
@@ -113,20 +120,14 @@ class ProductController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show(Request $request,$id)
+    public function show(Company $companies,$id)
     {
-        $companies = Company::findOrFail($id);
-        $products = Product::with('company')->get();
-        $products = Product::all();
+        $products = Product::findOrFail($id);
+        $companies = $products->company;
 
-        return view('show')
-            ->with(['products' => $products,'companies' => $companies]);
-      /* $products = Product::findOrFail($id);
-       $companies = Company::with('Company')->get();
-
-        return view('show',['companies' => $companies,'products' => $products]); 
-    */
-
+       // $companies = Company::with('products')->get();
+       
+       return view('show',compact('companies','products'));
     }
 
     /**
@@ -135,20 +136,15 @@ class ProductController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit(company $companies,$id)
+    public function edit(Company $companies,$id)
     {
 
         //会社名のみを表示したい
        // $companies = companies::findOrFail($id);
-       $products = product::findOrFail($id);
-       $company = company::where('company_name')->get();
+       $products = Product::findOrFail($id);
+       $companies = Company::all();
 
-        return view('edit')->with(['product' => $products,'companies' => $company]);
-
-
-     // return view('edit',compact('products','companies'));
-                //,compact('products','companies'));
-
+        return view('edit')->with(['product' => $products,'companies' => $companies]);
     }
 
     /**
@@ -158,8 +154,12 @@ class ProductController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Products $products)
+    public function update(Request $request, Product $products,$id)
     {
+
+        $product = Product::find($id);
+
+
         $request->validate([
             'product_name' => 'required',
             'price' => 'required',
@@ -168,15 +168,17 @@ class ProductController extends Controller
         ]);
 
 
-        $products = new products();
-        $products->product_name = $request->product_name;
-        $products->price = $request->price;
-        $products->stock = $request->stock;
-        $products->comment = $request->comment;
-        $products->save();
+        $product->product_name = $request->input('product_name');
+        $product->price = $request->input('price');
+        $product->stock = $request->input('stock');
+        $product->comment = $request->input('comment');
 
-        return redirect()
-            ->route('products', $products);
+        $company = Company::firstOrCreate(['company_name' => $request->input('company_name')]);
+        $product->company()->associate($company);
+    
+        $product->save();
+
+        return redirect()->route('products');
     }
 
     /**

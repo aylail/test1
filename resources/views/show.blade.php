@@ -5,33 +5,39 @@
 
 
 <h2 class="subtitle has-text-centered mt-4"> 詳細</h2>
-
-<table class="table is-bordered is-striped has-text-centered">
-        <tr>
-            <th>ID</th>
-            <th>商品画像</th>
-            <th>商品名</th>
-            <th>メーカー</th>
-            <th>価格</th>
-            <th>在庫数</th>
-            <th>コメント</th>
-
-        </tr>
-    
-        @foreach ($products as $product)
-        <tr>
-            <td>{{ $product->company_id }}</td>
-            <td>{{ $product->img_path}}</td>
-            <td>{{ $product->product_name }}</td>
-            <td>{{ $companies->company_name }}</td>
-            <td>{{ $product->price }}</td>
-            <td>{{ $product->stock }}</td>
-            <td>{{ $product->comment }}</td>
-@endforeach
-</table>
-
-    <div class="has-text-right">
-        <a class="button is-info my-4 has-right" href="{{ route('products') }}"> 戻る</a>
+<form method="POST" action="{{ route('products.show',$products->id) }}">
+ 
+<div class="media-content column is-8 is-offset-2">
+    <h3 class="has-text-weight-bold">ID:</h3>
+    <div class="box">
+        <p>{{ $products->company_id }}</p>
     </div>
+    <h3 class="has-text-weight-bold">画像:</h3>
+    <div class="box">
+        <p>{{ $products->img_path }}</p>
+    </div>
+    <h3 class="has-text-weight-bold">商品名:</h3>
+    <div class="box">
+        {{ $products->product_name }}
+    </div>
+    <h3 class="has-text-weight-bold">メーカー名:</h3>
+    <div class="box">
+        <p>{{ $companies->company_name }}</p>
+
+    </div> <h3 class="has-text-weight-bold">価格:</h3>
+    <div class="box">
+        <p>{{ $products->price }}</p>
+    </div> <h3 class="has-text-weight-bold">在庫数:</h3>
+    <div class="box">
+        <p>{{ $products->stock }}</p>
+    </div>
+    <h3 class="has-text-weight-bold">コメント:</h3>
+    <div class="box">
+        <p>{{ $products->comment }}</p>
+    </div>
+         <a class="button is-info" href="{{ route('products.edit', $products->id) }}">編集</a>    
+        <a class="button is-info" href="{{ route('products') }}"> 戻る</a>
+    </div>
+</form>
 </div>
 @endsection
