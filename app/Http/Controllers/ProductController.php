@@ -20,7 +20,6 @@ class ProductController extends Controller
      */
     public function getLists(Request $request)
     {
-        $product = Company::all();
         $query = Product::query()->with('company');
     
         $searchword = $request->input('searchword');
@@ -40,13 +39,27 @@ class ProductController extends Controller
             });
         }
     
-        // Get all products based on search and filters
         $products = $query->orderBy('id', 'desc')->get();
     
-        // Fetch all companies to populate the company_name dropdown
         $companies = Company::all();
-    
+
         return view('products', compact('products', 'companies', 'searchword', 'companyName'));
+       // return response()->json(['company_name','searchWord' => $products]);
+
+    }
+    //非同期検索機能
+    public function search(Request $request)
+    {
+        $query = $request->input('query');
+        $products = product::query()
+        ->where('product_name', 'LIKE', "%{$query}%")
+        ->orWhere('price', 'LIKE', "%{$query}%")
+        ->orWhere('stock', 'LIKE', "%{$query}%")
+        ->orWhere('comment', 'LIKE', "%{$query}%")
+        ->with('company')
+        ->orderBy('id', 'desc')
+        ->get();
+
     }
     
 

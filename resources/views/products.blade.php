@@ -1,6 +1,7 @@
 @extends('layout')
 
 @section('content')
+<div>
     <h2 class="subtitle has-text-centered mt-4">商品管理システム</h2>
 
     <form method="get">
@@ -67,4 +68,25 @@
             @endforeach
         </table>
     </div>
+
+    <script>
+        $.ajaxSetup({
+            headers: { 'X-CSRF-TOKEN': $("[name='csrf-token']").attr("content") },
+        })
+        $('.form-control').on('click', function(){
+            id = $('input[name="company_name","searchWord"]').val();
+            $.ajax({
+                url: "{{ route('products') }}",
+                method: "POST",
+                data: { company_name,searchWord : id },
+                dataType: "json",
+            }).done(function(res){
+                    console.log(res);
+                    $('ul').append('<li>'+ res + '</li>');
+            }).fail(function(){
+                alert('通信の失敗をしました');
+            });
+        });
+    </script>
+</div>
 @endsection

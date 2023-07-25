@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
 
 Route::get('/products', [ProductController::class, 'getLists'])->name('products')->middleware('auth');
+Route::get('/products/search', 'ProductController@search')->name('products.search');
 Route::get('/regists/create', [ProductController::class, 'create'])->name('regists.create')->middleware('auth');
 Route::post('/products/store', [ProductController::class, 'store'])->name('products.store')->middleware('auth');
 Route::delete('/products/destroy/{id}', [ProductController::class, 'destroy'])->name('products.destroy')->middleware('auth');
