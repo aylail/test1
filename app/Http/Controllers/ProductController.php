@@ -39,29 +39,67 @@ class ProductController extends Controller
             });
         }
     
-        $products = $query->orderBy('id', 'desc')->get();
-    
+        $products = $query->orderBy('id','desc')->get();
         $companies = Company::all();
 
         return view('products', compact('products', 'companies', 'searchword', 'companyName'));
-       // return response()->json(['company_name','searchWord' => $products]);
 
     }
     //非同期検索機能
     public function search(Request $request)
     {
-        $query = $request->input('query');
-        $products = product::query()
-        ->where('product_name', 'LIKE', "%{$query}%")
-        ->orWhere('price', 'LIKE', "%{$query}%")
-        ->orWhere('stock', 'LIKE', "%{$query}%")
-        ->orWhere('comment', 'LIKE', "%{$query}%")
-        ->with('company')
-        ->orderBy('id', 'desc')
-        ->get();
+    $query = Product::query()->with('company');
 
+    $searchword = $request->input('searchword');
+    $companyName = $request->input('company_name');
+
+    if (!empty($searchword)) {
+        $query->where('product_name', 'LIKE', "%{$searchword}%")
+            ->orWhere('price', 'LIKE', "%{$searchword}%")
+            ->orWhere('stock', 'LIKE', "%{$searchword}%")
+            ->orWhere('comment', 'LIKE', "%{$searchword}%");
     }
+
+    if (!empty($companyName)) {
+        $query->whereHas('company', function ($query) use ($companyName) {
+            $query->where('company_name', $companyName);
+        });
+    }
+
+    $products = $query->orderBy('price', 'asc')->get();
+
+
+    return response()->json($products);
+}
+
     
+public function searchProducts(Request $request)
+{
+    $column = $request->input('column');
+    $order = $request->input('order');
+
+    $query = Product::query()->with('company');
+    
+    $priceOrder = $request->input('price_order');
+    if ($priceOrder === 'asc') {
+        $query->orderBy('price', 'asc');
+    } else if ($priceOrder === 'desc') {
+        $query->orderBy('price', 'desc');
+    }
+
+    $stockOrder = $request->input('stock_order');
+    if ($stockOrder === 'asc') {
+        $query->orderBy('stock', 'asc');
+    } else if ($stockOrder === 'desc') {
+        $query->orderBy('stock', 'desc');
+    }
+
+    $products = $query->get();
+
+    return response()->json($products);
+}
+
+
 
     /**
      * Show the form for creating a new resource.

@@ -1,10 +1,10 @@
 @extends('layout')
 
 @section('content')
-<div>
+
     <h2 class="subtitle has-text-centered mt-4">商品管理システム</h2>
 
-    <form method="get">
+    <form id="searchForm" method="get">
         <div class="form-group">
             <input type="text" name="searchword" class="form-control" value="{{$searchword}}" placeholder="キーワード">
         </div>
@@ -12,8 +12,10 @@
             <input type="submit" value="検索">
         </div>
     </form>
+    <div id="searchResults"></div>
+   
 
-    <form method="get" action="{{ route('products') }}">
+    <form id="searchFormCompany" method="get">
     <select name="company_name" class="form-control">
         <option value="">メーカーを選択</option>
         @foreach ($companies as $company)
@@ -30,13 +32,20 @@
     <div class="column is-8 is-offset-2">
         <a class="button is-primary my-4" href="{{ route('regists.create') }}"> 新規作成</a>
 
+        <button class="button is-primary my-4" onclick="sortResults('price', 'asc')">昇順</button>
+        <button class="button is-primary my-4" onclick="sortResults('price', 'desc')">降順</button>
+
+        <!-- Add sorting buttons for stock -->
+        <button class="button is-primary my-4" onclick="sortResults('stock', 'asc')">在庫数昇順</button>
+        <button class="button is-primary my-4" onclick="sortResults('stock', 'desc')">在庫数降順</button>
+        
         <table class="table is-bordered is-striped has-text-centered">
             <tr>
                 <th>ID</th>
                 <th>商品画像</th>
                 <th>商品名</th>
-                <th>価格</th>
-                <th>在庫数</th>
+                <th>価格<button class="button" onclick="sortResults('price', 'asc')">昇順</button><button class="button" onclick="sortResults('price', 'desc')">降順</button></th>
+                <th>在庫数<button class="button" onclick="sortResults('stock', 'asc')">昇順</button><button class="button" onclick="sortResults('stock', 'desc')">降順</button></th>
                 <th>メーカー名</th>
             </tr>
 
@@ -60,8 +69,7 @@
                             <a class="button is-info" href="{{ route('products.edit', $product->id) }}">編集</a>
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="button is-danger"
-                                onclick='return confirm("削除しますか？");'>削除</button>
+                            <button type="submit" class="button is-danger" onclick='return confirm("削除しますか？");'>削除</button>
                         </form>
                     </td>
                 </tr>
@@ -70,23 +78,87 @@
     </div>
 
     <script>
-        $.ajaxSetup({
-            headers: { 'X-CSRF-TOKEN': $("[name='csrf-token']").attr("content") },
-        })
-        $('.form-control').on('click', function(){
-            id = $('input[name="company_name","searchWord"]').val();
-            $.ajax({
-                url: "{{ route('products') }}",
-                method: "POST",
-                data: { company_name,searchWord : id },
-                dataType: "json",
-            }).done(function(res){
-                    console.log(res);
-                    $('ul').append('<li>'+ res + '</li>');
-            }).fail(function(){
-                alert('通信の失敗をしました');
-            });
+
+    function sortResults(column, order) {
+    var searchword = $('input[name="searchword"]').val();
+    var companyName = $('select[name="company_name"]').val();
+    var formData = { searchword: searchword, company_name: companyName };
+
+    if (column === 'price') {
+        formData['price_order'] = order;
+    } else if (column === 'stock') {
+        formData['stock_order'] = order;
+    }
+    $.ajax({
+        type: 'GET',
+        url: '{{ route('products.sort') }}', // 正しいルート名を指定
+        data: formData,
+        dataType: 'json',
+        success: function(data) {
+            displaySearchResults(data);
+        },
+        error: function(error) {
+            console.log(error);
+        }
+    });
+
+
+    searchProducts(formData);
+}
+
+
+    function searchProducts(formData) {
+        $.ajax({
+            type: 'GET',
+            url: '{{ route('products.search') }}',
+            data: formData,
+            dataType: 'json',
+            success: function(data) {
+                displaySearchResults(data);
+            },
+            error: function(error) {
+                console.log(error);
+            }
         });
-    </script>
-</div>
+    }
+
+
+    function displaySearchResults(data) {
+        var searchResults = $('#searchResults');
+        searchResults.empty();
+
+        if (data.length > 1) {
+            var table = $('<table class="table is-bordered is-striped has-text-centered"></table>');
+            var tableHead = $('<tr><th>ID</th><th>商品画像</th><th>商品名</th><th>価格<button class="button" onclick="sortResults(\'price\', \'asc\')">&#x25B2;</button><button class="button" onclick="sortResults(\'price\', \'desc\')">&#x25BC;</button></th><th>在庫数<button class="button" onclick="sortResults(\'stock\', \'asc\')">&#x25B2;</button><button class="button" onclick="sortResults(\'stock\', \'desc\')">&#x25BC;</button></th><th>メーカー名</th></tr>');
+            table.append(tableHead);
+
+            $.each(data, function(index, product) {
+                var tableRow = $('<tr><td>' + product.id + '</td><td><img src="' + product.img_path + '" alt="Product Image" width="100" height="100"></td><td>' + product.product_name + '</td><td>' + product.price + '</td><td>' + product.stock + '</td><td>' + (product.company ? product.company.company_name : '登録なし') + '</td></tr>');
+                table.append(tableRow);
+            });
+
+            searchResults.append(table);
+        } else {
+            searchResults.append('<p>検索結果がありません。</p>');
+        }
+    }
+
+    
+    $(document).ready(function() {
+        $('#searchForm').on('submit', function(event) {
+            event.preventDefault();
+            var formData = $(this).serialize();
+            searchProducts(formData);
+        });
+
+        $('#searchFormCompany').on('submit', function(event) {
+            event.preventDefault();
+            var formData = $(this).serialize();
+            searchProducts(formData);
+        });
+    });
+</script>
+
+
+
 @endsection
