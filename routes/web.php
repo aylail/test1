@@ -15,6 +15,8 @@ Route::get('/products/searchword', [ProductController::class, 'searchWord'])->na
 Route::get('/products/searchProducts', [ProductController::class, 'searchProducts'])->name('products.searchProducts')->middleware('auth');
 
 Route::get('/products/sort', [ProductController::class, 'searchProducts'])->name('products.sort')->middleware('auth');
+Route::post('/products/purchase', [ProductController::class, 'purchase'])->name('products.purchase')->middleware('auth');
+
 
 
 Route::get('/', function () {

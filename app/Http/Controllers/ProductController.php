@@ -6,8 +6,10 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Company;
+use App\Models\Purchase;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 
 
@@ -26,7 +28,7 @@ class ProductController extends Controller
         $companyName = $request->input('company_name');
     
         if (!empty($searchword)) {
-            $query->where('company_id', 'LIKE', "%{$searchword}%")
+            $query->where('id', 'LIKE', "%{$searchword}%")
                   ->orWhere('product_name', 'LIKE', "%{$searchword}%")
                   ->orWhere('price', 'LIKE', "%{$searchword}%")
                   ->orWhere('stock', 'LIKE', "%{$searchword}%")
@@ -66,7 +68,7 @@ class ProductController extends Controller
         });
     }
 
-    $products = $query->orderBy('price', 'asc')->get();
+    $products = $query->orderBy('price', 'desc')->get();
 
 
     return response()->json($products);
@@ -165,6 +167,45 @@ public function store(Request $request)
 }
 
 
+public function purchase(Request $request)
+{
+    $request->validate([
+        'id' => 'required',
+        'stock' => 'required',
+    ]);
+    $productId = $request->input('id');
+    $stock = $request->input('stock');
+
+    DB::beginTransaction();
+    try {
+    $product = Product::findOrFail($productId);
+
+    if ($product->stock < $stock) {
+
+        return response()->json(['message' => '購入できません。']);
+    }
+        $product->stock -= $stock;
+        $product->save();
+
+        $purchase = new Purchase();
+        $purchase->product_id = $product->id;
+        $purchase->stock = $stock;
+        $purchase->save();
+
+        DB::commit();
+    return response()->json(['message' => '購入が完了しました。']);
+
+    } catch (\Exception $e) {
+        DB::rollback();
+        return response()->json(['message' => '購入処理を中断しました。'], 500);
+    }
+
+}
+
+
+
+
+
     /**
      * Display the specified resource.
      *
@@ -243,6 +284,6 @@ public function store(Request $request)
         $products = product::findOrFail($id);
         $products->delete();
        
-        return redirect()->route('products');
+        return response()->json(['message' => '削除しました。']);
     }
 }

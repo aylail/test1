@@ -38,7 +38,7 @@
         <!-- Add sorting buttons for stock -->
         <button class="button is-primary my-4" onclick="sortResults('stock', 'asc')">在庫数昇順</button>
         <button class="button is-primary my-4" onclick="sortResults('stock', 'desc')">在庫数降順</button>
-        
+
         <table class="table is-bordered is-striped has-text-centered">
             <tr>
                 <th>ID</th>
@@ -69,7 +69,8 @@
                             <a class="button is-info" href="{{ route('products.edit', $product->id) }}">編集</a>
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="button is-danger" onclick='return confirm("削除しますか？");'>削除</button>
+                            <meta name="csrf-token" content="{{ csrf_token() }}">
+                            <button type="button" class="button is-danger delete-product" data-product-id="{{ $product->id }}">削除</button>
                         </form>
                     </td>
                 </tr>
@@ -91,7 +92,7 @@
     }
     $.ajax({
         type: 'GET',
-        url: '{{ route('products.sort') }}', // 正しいルート名を指定
+        url: '{{ route('products.sort') }}', 
         data: formData,
         dataType: 'json',
         success: function(data) {
@@ -129,7 +130,7 @@
 
         if (data.length > 1) {
             var table = $('<table class="table is-bordered is-striped has-text-centered"></table>');
-            var tableHead = $('<tr><th>ID</th><th>商品画像</th><th>商品名</th><th>価格<button class="button" onclick="sortResults(\'price\', \'asc\')">&#x25B2;</button><button class="button" onclick="sortResults(\'price\', \'desc\')">&#x25BC;</button></th><th>在庫数<button class="button" onclick="sortResults(\'stock\', \'asc\')">&#x25B2;</button><button class="button" onclick="sortResults(\'stock\', \'desc\')">&#x25BC;</button></th><th>メーカー名</th></tr>');
+            var tableHead = $('<tr><th>ID</th><th>商品画像</th><th>商品名</th><th>価格<button class="button" onclick="sortResults(\'price\', \'asc\')">昇順</button><button class="button" onclick="sortResults(\'price\', \'desc\')">降順</button></th><th>在庫数<button class="button" onclick="sortResults(\'stock\', \'asc\')">昇順</button><button class="button" onclick="sortResults(\'stock\', \'desc\')">降順</button></th><th>メーカー名</th></tr>');
             table.append(tableHead);
 
             $.each(data, function(index, product) {
@@ -157,6 +158,38 @@
             searchProducts(formData);
         });
     });
+
+    $(document).ready(function() {
+    // ...
+
+    $('.delete-product').on('click', function() {
+    var $button = $(this);
+    var productId = $button.data('product-id');
+
+    $.ajax({
+        type: 'DELETE',
+        url: '/products/destroy/' + productId,
+        dataType: 'json',
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(data) {
+            // 削除成功時の処理
+            alert(data.message);
+            // 該当行を非表示にする
+            $button.closest('tr').hide();
+        },
+        error: function(error) {
+            console.log(error);
+            // エラー時の処理
+        }
+    });
+});
+
+
+});
+
+
 </script>
 
 

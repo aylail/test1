@@ -14,11 +14,10 @@ class Product extends Model
     protected $table = 'products';
     protected $primaryKey = 'id';
     
-    protected $fillable =['company_id','product_name','price','stock','comment','img_path'];
+    protected $fillable =['id','company_id','product_name','price','stock','comment','img_path'];
     public $sortable = ['company_id','product_name','price','stock','comment','img_path'];
     public function company()
     {
-        $products = Product::get()->sortBy('desc');
         return $this->belongsTo(Company::class,'company_id');
     }
 
