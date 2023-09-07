@@ -20,5 +20,9 @@ class Product extends Model
     {
         return $this->belongsTo(Company::class,'company_id');
     }
+    public function purchases()
+{
+    return $this->hasMany(Purchase::class, 'product_id'); 
+}
 
 }

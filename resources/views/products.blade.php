@@ -35,7 +35,7 @@
         <button class="button is-primary my-4" onclick="sortResults('price', 'asc')">昇順</button>
         <button class="button is-primary my-4" onclick="sortResults('price', 'desc')">降順</button>
 
-        <!-- Add sorting buttons for stock -->
+
         <button class="button is-primary my-4" onclick="sortResults('stock', 'asc')">在庫数昇順</button>
         <button class="button is-primary my-4" onclick="sortResults('stock', 'desc')">在庫数降順</button>
 

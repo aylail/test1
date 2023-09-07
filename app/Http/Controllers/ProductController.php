@@ -177,12 +177,12 @@ public function purchase(Request $request)
     $stock = $request->input('stock');
 
     DB::beginTransaction();
+
     try {
-    $product = Product::findOrFail($productId);
+        $product = Product::findOrFail($productId);
 
-    if ($product->stock < $stock) {
-
-        return response()->json(['message' => '購入できません。']);
+        if ($product->stock < $stock) {
+         return response()->json(['message' => '購入できません。在庫不足です。']);
     }
         $product->stock -= $stock;
         $product->save();
@@ -192,13 +192,14 @@ public function purchase(Request $request)
         $purchase->stock = $stock;
         $purchase->save();
 
-        DB::commit();
-    return response()->json(['message' => '購入が完了しました。']);
-
     } catch (\Exception $e) {
         DB::rollback();
         return response()->json(['message' => '購入処理を中断しました。'], 500);
     }
+    
+    DB::commit();
+
+    return response()->json(['message' => '購入が完了しました。']);
 
 }
 
@@ -281,9 +282,18 @@ public function purchase(Request $request)
      */
     public function destroy(Request $request,$id)
     {
-        $products = product::findOrFail($id);
-        $products->delete();
+        DB::beginTransaction();
+        try{
+            $products = product::findOrFail($id);
+            $products->delete();
+
+            DB::commit();
+            return response()->json(['message' => '削除しました。']);
+
+        }catch(\Exeption $e){
+            DB::rollback();
+            return response()->json(['massage' => '処理を中断しました']);
+        }
        
-        return response()->json(['message' => '削除しました。']);
     }
 }
